@@ -1,0 +1,139 @@
+
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: vdt_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: movies_db
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - vdt_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d movies_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: vdt_qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    networks:
+      - vdt_net
+    # Note: Qdrant image lacks curl/wget, so no healthcheck. 
+    # The backend handles connection retries gracefully.
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  redis:
+    image: redis:alpine
+    container_name: vdt_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - vdt_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vdt_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - QDRANT_HOST=vdt_qdrant
+      - QDRANT_PORT=6333
+      - POSTGRES_HOST=vdt_postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=movies_db
+      - EMBEDDINGS_PATH=/app/user_embeddings.pt
+      - REDIS_HOST=vdt_redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./backend:/app
+      - ./backend/libs:/app/libs
+      - ./user_embeddings.pt:/app/user_embeddings.pt
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - vdt_net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vdt_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - vdt_net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+networks:
+  vdt_net:
+    driver: bridge

@@ -1,0 +1,28 @@
+# Core API
+fastapi
+uvicorn
+gunicorn
+loguru
+
+# Database
+qdrant-client
+psycopg2-binary
+redis
+
+
+# ML/Data (CPU-only, lightweight)
+numpy
+scikit-learn
+sentence-transformers
+
+# Configuration
+pydantic
+pydantic-settings
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+
+
+# PyTorch CPU-only (much smaller than full version)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch

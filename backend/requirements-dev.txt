@@ -1,0 +1,4 @@
+# Testing dependencies (install locally, not in Docker)
+pytest
+pytest-asyncio
+httpx

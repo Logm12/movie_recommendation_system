@@ -1,0 +1,21 @@
+# AI Training Dependencies
+# Only needed for local training, NOT for Docker deployment
+
+# PyTorch (use CPU-only for lighter installation)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+
+# Graph Neural Networks
+torch-geometric
+
+# Data Processing
+pandas
+numpy
+scikit-learn
+
+# Database
+qdrant-client
+psycopg2-binary
+
+# HTTP
+requests

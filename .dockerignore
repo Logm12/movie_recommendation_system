@@ -1,0 +1,51 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.eggs
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtual environments
+venv
+.venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+.coverage
+htmlcov
+.tox
+
+# Docker artifacts (don't copy into build context)
+postgres_data
+qdrant_storage
+
+# Data files (mounted separately)
+data
+*.pt
+*.pth
+
+# Docs
+*.md
+!README.md
+
+# Agent/Skills (development only)
+.agent
+
+# Logs
+*.log

@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.eggs
+*.egg-info
+
+# Virtual environments
+venv
+.venv
+
+# IDE
+.vscode
+.idea
+
+# Tests (if not needed in container)
+tests
+
+# Docs
+*.md
