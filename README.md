@@ -1,312 +1,145 @@
-# 🎬 VDT GraphRec Pro
+# VDT GraphRec Pro
 
-<div align="center">
+## Overview
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
-![React](https://img.shields.io/badge/React-18.2-61DAFB.svg)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+VDT GraphRec Pro is a hybrid movie recommendation system that integrates Collaborative Filtering using LightGCN (Light Graph Convolutional Network) with Content-Based Retrieval using Vector Search (Qdrant). The system addresses the cold-start problem by allowing guest users to receive recommendations based on genre and keyword preferences, while providing personalized ranking for registered users based on their interaction history.
 
-**A Hybrid Movie Recommendation System powered by Graph Neural Networks and Vector Search**
+## Architecture
 
-[Features](#features) • [Architecture](#architecture) • [Quick Start](#quick-start) • [API Reference](#api-reference) • [Tech Stack](#tech-stack)
-
-</div>
-
----
-
-## 📖 Overview
-
-VDT GraphRec Pro is a production-ready movie recommendation system that combines **LightGCN** (Light Graph Convolutional Network) for collaborative filtering with **Qdrant** vector database for real-time similarity search. The system supports both personalized recommendations for known users and cold-start recommendations for guest users.
-
-### 🎯 Key Highlights
-
-- **LightGCN Model**: State-of-the-art graph neural network for learning user-item embeddings
-- **Neural Search**: Natural language movie discovery using Sentence-BERT
-- **Cold-Start Support**: Guest users can get recommendations based on genre preferences
-- **Robustness**: Enterprise-grade health checks and error handling
-- **Real Movie Posters**: Integration with TMDB API for authentic movie artwork
-- **Sub-100ms Latency**: Optimized for real-time recommendation serving
-- **Full Docker Deployment**: One command to run the entire stack
-
----
-
-## ✨ Features
-
-| Feature | Description |
-|---------|-------------|
-| 🎯 **Personalized Recommendations** | Graph-based collaborative filtering for 610 users |
-| 🧠 **Neural Search** | Semantic search understanding natural language queries |
-| 🆕 **Guest Mode (Cold-Start)** | Recommendations based on genre/keyword preferences |
-| 🖼️ **Real Movie Posters** | TMDB integration for authentic movie artwork |
-| ⚡ **High Performance** | <100ms API response time |
-| 🎨 **Modern UI** | Netflix-inspired dark theme with smooth animations |
-| 🐳 **Containerized** | Full Docker Compose deployment |
-
----
-
-## 🏗️ Architecture
+The system follows a microservices-based architecture, containerized using Docker.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                        VDT GraphRec Pro                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐      │
-│   │   Browser   │────▶│   React +   │────▶│    Nginx    │      │
-│   │             │◀────│   Mantine   │◀────│   :3000     │      │
-│   └─────────────┘     └─────────────┘     └─────────────┘      │
+│   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐       │
+│   │   Browser   │────▶│ React Client│────▶│    Nginx    │       │
+│   │             │◀────│             │◀────│   (Proxy)   │       │
+│   └─────────────┘     └─────────────┘     └─────────────┘       │
 │                              │                                  │
 │                              ▼                                  │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │              FastAPI Backend (:8000)                     │  │
-│   │  ┌─────────┐  ┌──────────┐  ┌──────────────────────┐   │  │
-│   │  │ config  │  │  models  │  │       services       │   │  │
-│   │  └─────────┘  └──────────┘  │ RecommendationService│   │  │
-│   │  ┌─────────────────────────────────────────────────┐   │  │
-│   │  │              repositories                        │   │  │
-│   │  │   MovieRepository    │    VectorRepository       │   │  │
-│   │  └─────────────────────────────────────────────────┘   │  │
-│   └─────────────────────────────────────────────────────────┘  │
+│   ┌─────────────────────────────────────────────────────────┐   │
+│   │                FastAPI Backend Service                  │   │
+│   │  ┌─────────┐  ┌──────────┐  ┌──────────────────────┐    │   │
+│   │  │ config  │  │  models  │  │       services       │    │   │
+│   │  └─────────┘  └──────────┘  │ RecommendationService│    │   │
+│   │  ┌─────────────────────────────────────────────────┐    │   │
+│   │  │              repositories                       │    │   │
+│   │  │   MovieRepository    │    VectorRepository      │    │   │
+│   │  └─────────────────────────────────────────────────┘    │   │
+│   └─────────────────────────────────────────────────────────┘   │
 │                    │                        │                   │
 │                    ▼                        ▼                   │
-│   │  PostgreSQL (:5432) │    │      Qdrant (:6333)         │   │
-│   │  - movies table     │    │  - 9,742 movie vectors      │   │
-│   │  - poster_url       │    │  - 384 dim (SBERT)          │   │
-│   └─────────────────────┘    └─────────────────────────────┘   │
+│   │      PostgreSQL         │    │        Qdrant           │    │
+│   │   (Relational Data)     │    │    (Vector Data)        │    │
+│   └─────────────────────┘    └─────────────────────────────┘    │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
----
+### Components
 
-## 🚀 Quick Start
+*   **Frontend**: React application utilizing Vite for build tooling and Mantine UI for component styling.
+*   **Backend**: FastAPI service implementing the recommendation logic, data retrieval, and API endpoints.
+*   **Database**: PostgreSQL for storing structured movie metadata and user information.
+*   **Vector Database**: Qdrant for storing and searching high-dimensional embeddings of movies and users.
+*   **AI Engine**: Offline training pipeline using PyTorch to train the LightGCN model and generation of SBERT embeddings.
+
+## Key Features
+
+*   **Graph-Based Collaborative Filtering**: Utilizes LightGCN to model high-order connectivity between users and items, capturing collaborative signals effectively.
+*   **Semantic Search**: Implements Sentence-BERT to encode movie metadata, enabling natural language search and content-based retrieval.
+*   **Cold-Start Mitigation**: Provides a "Guest Mode" that generates recommendations by aggregating vector embeddings of selected genres and keywords.
+*   **Performance Optimization**: Designed for low-latency inference, with sub-100ms response times for recommendation endpoints.
+*   **Containerization**: Full system definition in `docker-compose.yml` for reproducible deployments.
+
+## Quick Start
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Git
+*   Docker Engine 20.10+
+*   Docker Compose V2+
 
-### Installation
+### Deployment
 
-```bash
-# Clone the repository
-git clone https://github.com/Logm12/movie_recommendation_graphrec.git
-cd movie_recommendation_graphrec
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/Logm12/movie_recommendation_graphrec.git
+    cd movie_recommendation_graphrec
+    ```
 
-# Start all services
-docker-compose up -d --build
+2.  Start the services:
+    ```bash
+    docker-compose up -d --build
+    ```
 
-# Wait for services to initialize (about 30 seconds)
-# Then open http://localhost:3000 in your browser
-```
-
-### Verify Installation
-
-```bash
-# Check health
-curl http://localhost:8000/health
-
-# Expected response:
-# {"status":"healthy","embeddings_loaded":true,"known_users":610}
-```
-
----
-
-## 📚 API Reference
+3.  Access the application:
+    *   Frontend: `http://localhost:3000`
+    *   Backend API Docs: `http://localhost:8000/docs`
 
 ### Health Check
 
-```http
-GET /
-GET /health
+Verify the system status using the health endpoint:
+
+```bash
+curl http://localhost:8000/health
 ```
 
-### Get Recommendations (Known User)
-
-```http
-GET /recommend/{user_id}?top_k=10
-```
-
-**Parameters:**
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `user_id` | int | User ID (1-610) |
-| `top_k` | int | Number of recommendations (default: 10) |
-
-**Response:**
+Expected output:
 ```json
-{
-  "user_id": 1,
-  "recommendations": [
-    {
-      "id": 3430,
-      "title": "Death Wish (1974)",
-      "genres": "Action|Crime|Drama",
-      "poster_url": "https://image.tmdb.org/t/p/w500/...",
-      "score": 0.43
-    }
-  ]
-}
+{"status":"healthy","embeddings_loaded":true,"known_users":610}
 ```
+
+## API Reference
+
+### Recommendations (Authenticated User)
+
+**Endpoint**: `GET /recommend/{user_id}`
+
+Retrieves personalized movie recommendations for a specific user ID based on the trained LightGCN model.
+
+**Parameters**:
+*   `user_id` (integer): The unique identifier of the user (1-610).
+*   `top_k` (integer, optional): Number of recommendations to return. Default: 10.
 
 ### Cold-Start Recommendations (Guest)
 
-```http
-POST /recommend/cold_start
-Content-Type: application/json
+**Endpoint**: `POST /recommend/cold_start`
 
+Generates recommendations based on explicit user preferences (genres, keywords) using vector arithmetic in the embedding space.
+
+**Payload**:
+```json
 {
   "genres": ["Action", "Sci-Fi"],
-  "keywords": ["space"],
+  "keywords": ["space travel", "future"],
   "selected_movie_ids": [],
   "top_k": 10
 }
 ```
 
----
+## Technology Stack
 
-## 🛠️ Tech Stack
+*   **Language**: Python 3.10+, TypeScript
+*   **Frameworks**: FastAPI, React
+*   **Data Stores**: PostgreSQL, Qdrant, Redis
+*   **Machine Learning**: PyTorch, Sentence-Transformers
+*   **Infrastructure**: Docker, Nginx
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **AI Model** | LightGCN (PyTorch) + SBERT | Graph Collaborative Filtering + Semantic Search |
-| **Vector DB** | Qdrant | Fast similarity search with HNSW |
-| **Backend** | FastAPI | High-performance async API |
-| **Frontend** | React + Vite + Mantine | Modern responsive UI |
-| **Database** | PostgreSQL | Movie metadata storage |
-| **Cache** | Redis | Caching for high-speed performance |
-| **Container** | Docker Compose | Multi-service orchestration |
-| **Animation** | Framer Motion | Smooth UI transitions |
-
----
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-movie_recommendation_graphrec/
-├── ai_engine/                 # Model training scripts
-│   ├── model.py               # LightGCN implementation
-│   ├── train.py               # Training script
-│   ├── ingest_data.py         # Data ingestion
-│   └── enrich_posters.py      # TMDB poster fetcher
-├── backend/                   # FastAPI application
-│   ├── config.py              # Configuration
-│   ├── main.py                # API endpoints
-│   ├── models/                # Pydantic schemas
-│   ├── repositories/          # Data access layer
-│   └── services/              # Business logic
-├── frontend/                  # React application
-│   ├── src/
-│   │   ├── App.tsx            # Main component
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── services/          # API client
-│   │   └── types/             # TypeScript types
-│   └── Dockerfile
-├── data/                      # MovieLens dataset
-├── docker-compose.yml         # Service orchestration
-├── PROJECT_REPORT.md          # Technical documentation
-└── README.md                  # This file
+.
+├── ai_engine/          # Model training and data processing scripts
+├── backend/            # FastAPI application source code
+├── frontend/           # React application source code
+├── data/               # Raw dataset storage
+├── docker-compose.yml  # Service orchestration configuration
+├── PROJECT_REPORT.md   # Detailed technical report
+└── README.md           # This file
 ```
 
----
+## License
 
-## 🔬 Model Details
-
-### LightGCN Algorithm
-
-LightGCN simplifies graph convolution for collaborative filtering by removing feature transformation and non-linear activation:
-
-```
-e_u^(k+1) = Σ (1/√|N_u|√|N_i|) × e_i^(k)
-```
-
-**Key advantages:**
-- Captures high-order connectivity patterns
-- Lightweight and efficient training
-- State-of-the-art performance on MovieLens
-
-### Training Configuration
-
-| Parameter | Value |
-|-----------|-------|
-| Embedding Dimension | 64 |
-| Number of Layers | 3 |
-| Learning Rate | 0.001 |
-| Batch Size | 1024 |
-| Epochs | 100 |
-
----
-
-## 📊 Performance
-
-| Metric | Value |
-|--------|-------|
-| API Latency (p50) | 45ms |
-| API Latency (p99) | 98ms |
-| Recall@20 | 0.142 |
-| NDCG@20 | 0.094 |
-| Users Supported | 610 |
-| Movies in Database | 9,742 |
-
----
-
-## 🖼️ Screenshots
-
-### Main Dashboard
-*Netflix-inspired dark theme with movie recommendations*
-
-### Guest Mode
-*Cold-start recommendations based on genre preferences*
-
----
-
-## 🔧 Development
-
-### Local Development (without Docker)
-
-```bash
-# Backend
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-
-# Frontend
-cd frontend
-npm install
-npm run dev
-```
-
-### Run Tests
-
-```bash
-cd backend
-pip install -r requirements-dev.txt
-pytest
-```
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- [MovieLens](https://grouplens.org/datasets/movielens/) for the dataset
-- [LightGCN Paper](https://arxiv.org/abs/2002.02126) for the algorithm
-- [TMDB](https://www.themoviedb.org/) for movie posters
-- [Qdrant](https://qdrant.tech/) for vector database
-
----
-
-<div align="center">
-
-**Built with ❤️ for Viettel Digital Talent Program**
-
-[⬆ Back to top](#-vdt-graphrec-pro)
-
-</div>
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
