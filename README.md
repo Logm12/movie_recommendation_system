@@ -4,39 +4,12 @@
 
 VDT GraphRec Pro is a hybrid movie recommendation system that integrates Collaborative Filtering using LightGCN (Light Graph Convolutional Network) with Content-Based Retrieval using Vector Search (Qdrant). The system addresses the cold-start problem by allowing guest users to receive recommendations based on genre and keyword preferences, while providing personalized ranking for registered users based on their interaction history.
 
-## Architecture
+## Architecture 
 
 The system follows a microservices-based architecture, containerized using Docker.
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        VDT GraphRec Pro                         │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐       │
-│   │   Browser   │────▶│ React Client│────▶│    Nginx    │       │
-│   │             │◀────│             │◀────│   (Proxy)   │       │
-│   └─────────────┘     └─────────────┘     └─────────────┘       │
-│                              │                                  │
-│                              ▼                                  │
-│   ┌─────────────────────────────────────────────────────────┐   │
-│   │                FastAPI Backend Service                  │   │
-│   │  ┌─────────┐  ┌──────────┐  ┌──────────────────────┐    │   │
-│   │  │ config  │  │  models  │  │       services       │    │   │
-│   │  └─────────┘  └──────────┘  │ RecommendationService│    │   │
-│   │  ┌─────────────────────────────────────────────────┐    │   │
-│   │  │              repositories                       │    │   │
-│   │  │   MovieRepository    │    VectorRepository      │    │   │
-│   │  └─────────────────────────────────────────────────┘    │   │
-│   └─────────────────────────────────────────────────────────┘   │
-│                    │                        │                   │
-│                    ▼                        ▼                   │
-│   │      PostgreSQL         │    │        Qdrant           │    │
-│   │   (Relational Data)     │    │    (Vector Data)        │    │
-│   └─────────────────────┘    └─────────────────────────────┘    │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+<p align="center">
+  <img src="./assets/Movie-rec-diagram.png" alt="Architechture Diagram" width="100%">
+</p>
 
 ### Components
 

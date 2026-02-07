@@ -1,0 +1,55 @@
+
+graph TD
+    classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
+    classDef service fill:#e1f5fe,stroke:#0277bd,stroke-width:2px;
+    classDef database fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef ai fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px;
+
+    %% Tầng Client
+    subgraph Client ["Tầng Client"]
+        Browser["Trình Duyệt Người Dùng"]:::client
+    end
+
+    %% Tầng Frontend
+    subgraph Frontend ["Tầng Frontend"]
+        ReactApp["Frontend React<br/>(Vite + Mantine)"]:::client
+    end
+
+    %% Tầng API
+    subgraph API ["Giao Diện API"]
+        Nginx["Nginx Reverse Proxy"]:::service
+        FastAPI["Backend FastAPI"]:::service
+    end
+
+    %% Tầng Dữ Liệu
+    subgraph Data ["Lưu Trữ Dữ Liệu"]
+        Postgres[("PostgreSQL<br/>(Metadata)")]:::database
+        Qdrant[("Qdrant<br/>(Vector DB)")]:::database
+        Redis[("Redis<br/>(Cache)")]:::database
+    end
+
+    %% AI Engine
+    subgraph AI_Engine ["AI & Training Engine"]
+        LightGCN["Mô Hình LightGCN<br/>(Lọc Cộng Tác)"]:::ai
+        SBERT["SBERT Encoder<br/>(Tìm Kiếm Ngữ Nghĩa)"]:::ai
+        Training["Training Pipeline<br/>(PyTorch)"]:::ai
+    end
+
+    %% Kết Nối
+    Browser -- "HTTP/HTTPS" --> Nginx
+    Nginx -- "Static Assets" --> ReactApp
+    Nginx -- "API Requests" --> FastAPI
+    
+    FastAPI -- "Đọc/Ghi" --> Postgres
+    FastAPI -- "Tìm Kiếm Vector" --> Qdrant
+    FastAPI -- "Cache Hit/Miss" --> Redis
+    
+    Training -- "Huấn Luyện Mô Hình" --> LightGCN
+    Training -- "Tạo Embeddings" --> SBERT
+    
+    LightGCN -- "Xuất Embeddings Người Dùng/Item" --> Qdrant
+    SBERT -- "Mã Hóa Metadata" --> Qdrant
+    
+    %% Luồng dữ liệu cho các tính năng cụ thể
+    FastAPI -.->|"Cold Start"| SBERT
+    FastAPI -.->|"Gợi Ý (Recommendations)"| LightGCN
